@@ -18,11 +18,14 @@ By turning these concepts into core game mechanics (e.g., investigating scenes, 
 
 ## Features
 
-- **Role-Based Workflows**: Separate, tailored dashboards for Students and Teachers.
-- **Game Engine**: Custom game modes based on the three pramanas (Classifier, Decoder, Debate, Syllogism, etc.).
-- **Classroom Management**: Teachers can create custom games, approve student enrollments via 6-character class codes, and track class data.
-- **Analytics & Reporting**: Detailed breakdowns of student performance (accuracy, speed, level completion) with one-click PDF report generation.
-- **Educator Toolkit**: Downloadable resources and frameworks to help teachers integrate IKS mechanics into their standard curriculum.
+- **Role-Based Workflows**: Separate, tailored dashboards for Students and Teachers with deep cognitive insights.
+- **Game Engine & Guru Hints**: Custom game modes based on the three pramanas, coupled with a real-time hint tracking system (Guru) which penalizes and logs interventions.
+- **Assessments & Cognitive Profiling**: Mandatory unskippable Pre-tests and Post-tests accurately calculate raw learning deltas, presented on the Student Dashboard via interactive Radar Charts.
+- **Reflection Journaling**: Post-game contextual reflection prompts encourage metacognition, saved securely for teacher review.
+- **Classroom Management & Analytics**: Teachers can create custom games, and students can instantly join them via 6-character game codes.
+- **Comprehensive Reporting**: Educators can generate one-click visual PDF Effectiveness Reports and export mass CSV dumps from the Research dataset.
+- **Leaderboards**: Both Global and localized Class-scoped leaderboards rank students securely.
+- **IKS Ecosystem**: A built-in immersive IKS Framework encyclopedia and Documentation tab guides the user experience.
 
 ## Local Development
 

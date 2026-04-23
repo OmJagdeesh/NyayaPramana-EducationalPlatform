@@ -90,7 +90,7 @@ export default function TeachersPage({ user }) {
               <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ color: 'var(--sacred-teal)' }}>📚</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{teacher.active_classes} active class{teacher.active_classes !== 1 ? 'es' : ''}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{teacher.active_classes} active game{teacher.active_classes !== 1 ? 's' : ''}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ color: 'var(--gold)' }}>👥</span>
@@ -115,10 +115,10 @@ export default function TeachersPage({ user }) {
               <div style={{ fontSize: 48, marginBottom: 16 }}>🔗</div>
               <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No Teachers Yet</div>
               <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 8 }}>
-                Join a class using a class code to connect with a teacher.
+                Join a game using a game code to connect with a teacher.
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-faded)' }}>
-                Go to "Join a Game" in the navbar to enter a class code.
+                Go to "Join a Game" in the navbar to enter a game code.
               </div>
             </div>
           ) : myTeachers.map(teacher => (
@@ -143,7 +143,7 @@ export default function TeachersPage({ user }) {
               </div>
 
               <div style={{ marginTop: 4 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-faded)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Classes</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faded)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Games</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {(teacher.class_names || '').split(',').filter(Boolean).map(cls => (
                     <span key={cls} className="pramana-tag" style={{

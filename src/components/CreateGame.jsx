@@ -54,9 +54,20 @@ export default function CreateGame({ user, notify }) {
       return;
     }
 
-    const validQuestions = questions.filter(q => q.text.trim() && q.options.every(o => o.trim()));
+    const validQuestions = questions.map(q => {
+      const newOptions = [];
+      let newCorrectIndex = 0;
+      q.options.forEach((opt, idx) => {
+        if (opt.trim()) {
+          if (idx === q.correctIndex) newCorrectIndex = newOptions.length;
+          newOptions.push(opt.trim());
+        }
+      });
+      return { ...q, options: newOptions, correctIndex: newCorrectIndex };
+    }).filter(q => q.text.trim() && q.options.length >= 2);
+
     if (type !== 'class' && validQuestions.length === 0) {
-      notify('Please add at least one complete question.', 'error');
+      notify('Please add at least one complete question (needs text and minimum 2 options).', 'error');
       return;
     }
 
@@ -73,7 +84,7 @@ export default function CreateGame({ user, notify }) {
           pramana: q.pramana
         }))
       });
-      notify(`Created! Class code: ${result.classCode}`, 'success');
+      notify(`Created! Game code: ${result.classCode}`, 'success');
       setShowCreate(false);
       setName('');
       setDescription('');
@@ -97,11 +108,15 @@ export default function CreateGame({ user, notify }) {
 
   function updateQuestion(index, field, value) {
     const updated = [...questions];
+    const qCopy = { ...updated[index] };
     if (field === 'option') {
-      updated[index].options[value.optIdx] = value.text;
+      const newOptions = [...qCopy.options];
+      newOptions[value.optIdx] = value.text;
+      qCopy.options = newOptions;
     } else {
-      updated[index][field] = value;
+      qCopy[field] = value;
     }
+    updated[index] = qCopy;
     setQuestions(updated);
   }
 
@@ -125,7 +140,7 @@ export default function CreateGame({ user, notify }) {
           <div className="welcome-text">✦ Game Creator</div>
           <div className="dashboard-title">{showCreate ? 'New Game / Quiz' : 'My Games & Quizzes'}</div>
           <div style={{ fontSize: 13, color: 'var(--text-faded)', marginTop: 4 }}>
-            {showCreate ? 'Create custom questions and share via class code' : `${classes.length} game${classes.length !== 1 ? 's' : ''} created`}
+            {showCreate ? 'Create custom questions and share via game code' : `${classes.length} game${classes.length !== 1 ? 's' : ''} created`}
           </div>
         </div>
         <div className="dashboard-header-right">
@@ -240,7 +255,7 @@ export default function CreateGame({ user, notify }) {
             <div className="glass-strong" style={{ padding: 48, textAlign: 'center', borderRadius: 24, gridColumn: '1 / -1' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🎮</div>
               <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>No Games Created Yet</div>
-              <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>Create your first quiz or game and share it with students via a class code.</div>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>Create your first quiz or game and share it with students via a game code.</div>
               <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Create First Game</button>
             </div>
           ) : classes.map(cls => (
@@ -267,7 +282,7 @@ export default function CreateGame({ user, notify }) {
                 justifyContent: 'space-between', alignItems: 'center'
               }}>
                 <div>
-                  <div style={{ fontSize: 10, color: 'var(--text-faded)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Class Code</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faded)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Game Code</div>
                   <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold)', letterSpacing: 4, fontFamily: 'monospace' }}>{cls.class_code}</div>
                 </div>
                 <button className="nav-btn nav-btn-inactive" style={{ fontSize: 11 }}
@@ -300,7 +315,7 @@ export default function CreateGame({ user, notify }) {
                 <div style={{ fontSize: 13, color: 'var(--text-faded)' }}>{selectedClass.description}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 10, color: 'var(--text-faded)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Class Code</div>
+                <div style={{ fontSize: 10, color: 'var(--text-faded)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Game Code</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold)', letterSpacing: 5, fontFamily: 'monospace' }}>{selectedClass.class_code}</div>
               </div>
             </div>
@@ -358,7 +373,7 @@ export default function CreateGame({ user, notify }) {
             </div>
           ) : (
             <div className="glass" style={{ padding: 32, textAlign: 'center', borderRadius: 16, color: 'var(--text-muted)' }}>
-              No students enrolled yet. Share the class code to get started.
+              No students enrolled yet. Share the game code to get started.
             </div>
           )}
         </div>

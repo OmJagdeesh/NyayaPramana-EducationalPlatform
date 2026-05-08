@@ -489,4 +489,73 @@ router.get('/research-export', authenticate, (req, res) => {
   }
 });
 
+// ─── SEARCH STUDENTS (for teacher direct enroll) ──────────────────
+router.get('/search-students', authenticate, (req, res) => {
+  if (req.user.role !== 'teacher') {
+    return res.status(403).json({ error: 'Only teachers can search students' });
+  }
+  const q = (req.query.q || '').trim();
+  if (!q || q.length < 2) {
+    return res.json([]);
+  }
+  try {
+    const students = db.prepare(`
+      SELECT u.id, u.name, u.email, u.institution,
+        COALESCE(up.total_score, 0) as total_score,
+        COALESCE(up.overall_accuracy, 0) as overall_accuracy
+      FROM users u
+      LEFT JOIN user_progress up ON u.id = up.user_id
+      WHERE u.role = 'student'
+        AND (LOWER(u.name) LIKE LOWER(?) OR LOWER(u.email) LIKE LOWER(?))
+      ORDER BY u.name
+      LIMIT 15
+    `).all(`%${q}%`, `%${q}%`);
+    res.json(students);
+  } catch (error) {
+    console.error('Search students error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── DIRECT ENROLL (teacher enrolls student without join request) ──
+router.post('/enroll-direct', authenticate, (req, res) => {
+  if (req.user.role !== 'teacher') {
+    return res.status(403).json({ error: 'Only teachers can directly enroll students' });
+  }
+  const { classId, studentId } = req.body;
+  if (!classId || !studentId) {
+    return res.status(400).json({ error: 'classId and studentId are required' });
+  }
+  try {
+    // Verify teacher owns the class
+    const cls = db.prepare('SELECT * FROM classes WHERE id = ? AND teacher_id = ?').get(classId, req.user.id);
+    if (!cls) {
+      return res.status(404).json({ error: 'Class not found or not yours' });
+    }
+    // Verify student exists
+    const student = db.prepare("SELECT id, name FROM users WHERE id = ? AND role = 'student'").get(studentId);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    // Insert or update enrollment to approved
+    const existing = db.prepare('SELECT id, status FROM class_enrollments WHERE class_id = ? AND student_id = ?').get(classId, studentId);
+    if (existing) {
+      if (existing.status === 'approved') {
+        return res.status(409).json({ error: `${student.name} is already enrolled in this class` });
+      }
+      db.prepare("UPDATE class_enrollments SET status = 'approved' WHERE id = ?").run(existing.id);
+    } else {
+      db.prepare(`
+        INSERT INTO class_enrollments (id, class_id, student_id, status)
+        VALUES (?, ?, ?, 'approved')
+      `).run(uuidv4(), classId, studentId);
+    }
+    res.json({ message: `${student.name} enrolled successfully in ${cls.name}` });
+  } catch (error) {
+    console.error('Direct enroll error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
+

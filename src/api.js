@@ -87,4 +87,9 @@ export const api = {
   resetUserPassword: (userId) => request('/admin/reset-password', { method: 'POST', body: JSON.stringify({ userId }) }),
   deleteUser: (userId) => request(`/admin/delete-user/${userId}`, { method: 'DELETE' }),
   removeClass: (classId) => request(`/admin/remove-class/${classId}`, { method: 'DELETE' }),
+  bulkImport: (rows) => request('/admin/bulk-import', { method: 'POST', body: JSON.stringify({ rows }) }),
+
+  // Teacher Direct Enrollment
+  searchStudents: (q) => request(`/class/search-students?q=${encodeURIComponent(q)}`),
+  directEnrollStudent: (data) => request('/class/enroll-direct', { method: 'POST', body: JSON.stringify(data) }),
 };

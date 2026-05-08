@@ -222,4 +222,67 @@ router.delete('/remove-class/:classId', authenticateAdmin, (req, res) => {
   }
 });
 
+// ─── BULK IMPORT USERS (from Excel/CSV parsed on frontend) ────────
+router.post('/bulk-import', authenticateAdmin, async (req, res) => {
+  const { rows } = req.body;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ error: 'No rows provided' });
+  }
+
+  const DEFAULT_IMPORT_PASSWORD = 'Test@1234';
+  const results = { created: 0, skipped: 0, errors: [] };
+
+  try {
+    const hash = await bcrypt.hash(DEFAULT_IMPORT_PASSWORD, 10);
+
+    for (const row of rows) {
+      const prn = (row.prn || row.PRN || row.Prn || '').toString().trim();
+      const name = (row.name || row.Name || row.NAME || '').toString().trim();
+      const role = (row.role || row.Role || row.ROLE || 'student').toString().trim().toLowerCase();
+      const institution = (row.institution || row.Institution || row.INSTITUTION || '').toString().trim();
+
+      if (!prn || !name) {
+        results.errors.push({ row: JSON.stringify(row), reason: 'Missing PRN or Name' });
+        continue;
+      }
+
+      if (!['student', 'teacher'].includes(role)) {
+        results.errors.push({ row: name, reason: `Invalid role: "${role}"` });
+        continue;
+      }
+
+      const email = `${prn}@nyaya.edu`;
+
+      // Check if already exists
+      const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+      if (existing) {
+        results.skipped++;
+        continue;
+      }
+
+      try {
+        const userId = uuidv4();
+        db.transaction(() => {
+          db.prepare('INSERT INTO users (id, name, email, password_hash, role, institution) VALUES (?, ?, ?, ?, ?, ?)').run(
+            userId, name, email, hash, role, institution || null
+          );
+          db.prepare('INSERT OR IGNORE INTO user_progress (user_id) VALUES (?)').run(userId);
+        })();
+        results.created++;
+      } catch (rowErr) {
+        results.errors.push({ row: name, reason: rowErr.message });
+      }
+    }
+
+    res.json({
+      message: `Import complete: ${results.created} created, ${results.skipped} skipped, ${results.errors.length} errors`,
+      ...results,
+    });
+  } catch (error) {
+    console.error('Bulk import error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
+

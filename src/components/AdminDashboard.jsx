@@ -8,12 +8,59 @@ export default function AdminDashboard({ user, onLogout, initialTab }) {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null); // { id, name, type }
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [expandedTeacher, setExpandedTeacher] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
 
+  // Import tab state
+  const [importFile, setImportFile] = useState(null);
+  const [importRows, setImportRows] = useState([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+
   useEffect(() => { loadData(); }, []);
+
+  // Load SheetJS (xlsx) dynamically for Excel parsing
+  useEffect(() => {
+    if (!window.XLSX) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  async function parseFile(file) {
+    setImportFile(file);
+    setImportResult(null);
+    setImportRows([]);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = window.XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = window.XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      setImportRows(rows);
+    } catch (e) {
+      showMsg('Failed to parse file: ' + e.message, 'error');
+    }
+  }
+
+  async function runImport() {
+    if (!importRows.length) return;
+    setImportLoading(true);
+    setImportResult(null);
+    try {
+      const result = await api.bulkImport(importRows);
+      setImportResult(result);
+      showMsg(result.message);
+      await loadData();
+    } catch (e) {
+      showMsg(e.message, 'error');
+    } finally {
+      setImportLoading(false);
+    }
+  }
 
   function showMsg(msg, type = 'success') {
     setActionMsg({ msg, type });
@@ -156,10 +203,11 @@ export default function AdminDashboard({ user, onLogout, initialTab }) {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        {[
+      {[
           { id: 'overview', label: '📊 Overview' },
           { id: 'users', label: '👥 Users' },
           { id: 'teachers', label: '📚 Teachers' },
+          { id: 'import', label: '📥 Import' },
         ].map(t => (
           <button key={t.id}
             className={`nav-btn ${activeTab === t.id ? 'nav-btn-active' : 'nav-btn-inactive'}`}
@@ -451,6 +499,127 @@ export default function AdminDashboard({ user, onLogout, initialTab }) {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+          {/* ── IMPORT TAB ── */}
+          {activeTab === 'import' && (
+            <div>
+              <div className="glass-strong" style={{ padding: 32, borderRadius: 24, marginBottom: 24 }}>
+                <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--sacred-teal)', marginBottom: 6 }}>📥 Bulk Import Users</div>
+                <div style={{ fontSize: 13, color: 'var(--text-faded)', marginBottom: 24, lineHeight: 1.7 }}>
+                  Upload a <strong style={{ color: 'var(--gold)' }}>.csv</strong> or <strong style={{ color: 'var(--gold)' }}>.xlsx</strong> file.
+                  Each row becomes one account. The PRN column is used to generate <span style={{ fontFamily: 'monospace', color: 'var(--gold)' }}>PRN@nyaya.edu</span> as the login email.
+                  Default password for all imported accounts: <span style={{ fontFamily: 'monospace', color: '#86efac', fontWeight: 700 }}>Test@1234</span>
+                </div>
+
+                {/* Column guide */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10, marginBottom: 24 }}>
+                  {[
+                    { col: 'name', req: true,  desc: 'Full name' },
+                    { col: 'prn',  req: true,  desc: 'Numeric PRN (becomes email)' },
+                    { col: 'role', req: false, desc: 'student / teacher (default: student)' },
+                    { col: 'institution', req: false, desc: 'College / School name' },
+                  ].map(c => (
+                    <div key={c.col} style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)' }}>
+                      <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 13, color: c.req ? 'var(--gold)' : 'var(--sacred-teal)' }}>
+                        {c.col} {c.req && <span style={{ color: '#fca5a5', fontSize: 10 }}>*required</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-faded)', marginTop: 4 }}>{c.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* File picker */}
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 14, padding: '18px 24px', borderRadius: 14,
+                  border: '2px dashed rgba(10,191,188,0.4)', cursor: 'pointer',
+                  background: 'rgba(10,191,188,0.05)', transition: 'all 0.2s', marginBottom: 20,
+                }}>
+                  <span style={{ fontSize: 28 }}>📂</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                      {importFile ? importFile.name : 'Click to choose a .csv or .xlsx file'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-faded)', marginTop: 2 }}>
+                      {importFile ? `${importRows.length} rows detected` : 'Supports Excel (.xlsx) and CSV (.csv)'}
+                    </div>
+                  </div>
+                  <input
+                    type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) parseFile(f); }}
+                  />
+                </label>
+
+                {/* Preview table */}
+                {importRows.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10 }}>
+                      Preview — first {Math.min(5, importRows.length)} of {importRows.length} rows:
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="student-table">
+                        <thead>
+                          <tr>
+                            {Object.keys(importRows[0]).map(k => <th key={k}>{k}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importRows.slice(0, 5).map((row, i) => (
+                            <tr key={i}>
+                              {Object.values(row).map((v, j) => (
+                                <td key={j} style={{ fontSize: 12, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{String(v)}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Import button */}
+                {importRows.length > 0 && (
+                  <button
+                    className="btn-primary"
+                    onClick={runImport}
+                    disabled={importLoading}
+                    style={{ padding: '14px 36px', fontSize: 15, opacity: importLoading ? 0.7 : 1 }}
+                  >
+                    {importLoading ? '⏳ Importing...' : `📥 Import ${importRows.length} Accounts`}
+                  </button>
+                )}
+              </div>
+
+              {/* Results */}
+              {importResult && (
+                <div className="glass-strong" style={{ padding: 24, borderRadius: 20 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Import Results</div>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: importResult.errors?.length ? 20 : 0 }}>
+                    {[
+                      { label: '✅ Created', val: importResult.created, color: '#86efac', bg: 'rgba(34,197,94,0.12)' },
+                      { label: '⏭ Skipped', val: importResult.skipped, color: 'var(--gold)', bg: 'rgba(247,201,72,0.10)' },
+                      { label: '❌ Errors', val: importResult.errors?.length || 0, color: '#fca5a5', bg: 'rgba(239,68,68,0.10)' },
+                    ].map(r => (
+                      <div key={r.label} style={{ padding: '14px 24px', borderRadius: 14, background: r.bg, border: `1px solid ${r.color}44`, textAlign: 'center', minWidth: 120 }}>
+                        <div style={{ fontSize: 26, fontWeight: 800, color: r.color }}>{r.val}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{r.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {importResult.errors?.length > 0 && (
+                    <div style={{ marginTop: 16 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5', marginBottom: 8 }}>Error Details:</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {importResult.errors.map((e, i) => (
+                          <div key={i} style={{ fontSize: 12, color: 'var(--text-muted)', padding: '6px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 6 }}>
+                            <strong style={{ color: '#fca5a5' }}>{e.row}</strong>: {e.reason}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

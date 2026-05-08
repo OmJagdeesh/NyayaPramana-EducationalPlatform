@@ -13,6 +13,13 @@ export default function ClassData({ user, notify }) {
   const [journals, setJournals] = useState([]);
   const [journalLoading, setJournalLoading] = useState(false);
 
+  // Direct Enroll state
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [enrollQuery, setEnrollQuery] = useState('');
+  const [enrollResults, setEnrollResults] = useState([]);
+  const [enrolling, setEnrolling] = useState(null);
+  const [enrollMsg, setEnrollMsg] = useState(null);
+
   useEffect(() => { loadClasses(); }, []);
 
   async function loadClasses() {
@@ -55,6 +62,31 @@ export default function ClassData({ user, notify }) {
       notify('Failed to load game stats.', 'error');
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  async function searchForEnroll(q) {
+    setEnrollQuery(q);
+    if (q.length < 2) { setEnrollResults([]); return; }
+    try {
+      const data = await api.searchStudents(q);
+      setEnrollResults(data);
+    } catch (e) { setEnrollResults([]); }
+  }
+
+  async function doEnroll(student) {
+    if (!selectedClassId) return;
+    setEnrolling(student.id);
+    try {
+      const res = await api.directEnrollStudent({ classId: selectedClassId, studentId: student.id });
+      setEnrollMsg({ text: `✅ ${res.message}`, ok: true });
+      await selectClass(selectedClassId); // refresh
+      setEnrollResults(prev => prev.filter(s => s.id !== student.id));
+    } catch (e) {
+      setEnrollMsg({ text: `❌ ${e.message}`, ok: false });
+    } finally {
+      setEnrolling(null);
+      setTimeout(() => setEnrollMsg(null), 3500);
     }
   }
 
@@ -332,12 +364,89 @@ export default function ClassData({ user, notify }) {
                 ))}
               </div>
 
-              {/* View Game Stats Button */}
-              <div style={{ marginBottom: 20 }}>
+              {/* Action Bar: Game Stats + Enroll */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
                 <button className="btn-outline" onClick={() => viewGameStats(selectedClassId)} style={{ fontSize: 13 }}>
                   📈 View Game Results & Stats
                 </button>
+                <button
+                  className={showEnroll ? 'btn-primary' : 'btn-outline'}
+                  onClick={() => { setShowEnroll(s => !s); setEnrollQuery(''); setEnrollResults([]); setEnrollMsg(null); }}
+                  style={{ fontSize: 13 }}
+                >
+                  {showEnroll ? '✕ Close Enroll Panel' : '➕ Enroll Students Directly'}
+                </button>
               </div>
+
+              {/* ─── DIRECT ENROLL PANEL ─── */}
+              {showEnroll && (
+                <div className="glass-strong" style={{ padding: 24, borderRadius: 20, marginBottom: 24 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--sacred-teal)', marginBottom: 4 }}>➕ Direct Enrollment</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-faded)', marginBottom: 16 }}>
+                    Search a student by name or PRN (e.g. <span style={{ fontFamily: 'monospace', color: 'var(--gold)' }}>1032232531</span>) and enroll them immediately — no join request needed.
+                  </div>
+
+                  {enrollMsg && (
+                    <div style={{
+                      padding: '10px 16px', borderRadius: 10, marginBottom: 14, fontWeight: 600, fontSize: 13,
+                      background: enrollMsg.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                      border: `1px solid ${enrollMsg.ok ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                      color: enrollMsg.ok ? '#86efac' : '#fca5a5',
+                    }}>{enrollMsg.text}</div>
+                  )}
+
+                  <div style={{ position: 'relative', marginBottom: 16 }}>
+                    <input
+                      value={enrollQuery}
+                      onChange={e => searchForEnroll(e.target.value)}
+                      placeholder="🔍 Search by name or PRN..."
+                      style={{
+                        width: '100%', padding: '12px 16px', borderRadius: 10, fontSize: 14,
+                        background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
+                        color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  {enrollResults.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {enrollResults.map(s => (
+                        <div key={s.id} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                          padding: '12px 16px', borderRadius: 10,
+                          background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)',
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-faded)' }}>{s.email}</div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 11, color: 'var(--gold)' }}>Score: {s.total_score}</span>
+                            <button
+                              onClick={() => doEnroll(s)}
+                              disabled={enrolling === s.id}
+                              style={{
+                                padding: '7px 18px', borderRadius: 8, border: '1px solid rgba(10,191,188,0.4)',
+                                background: 'rgba(10,191,188,0.12)', color: 'var(--sacred-teal)',
+                                cursor: enrolling === s.id ? 'not-allowed' : 'pointer',
+                                fontWeight: 700, fontSize: 12, opacity: enrolling === s.id ? 0.6 : 1,
+                              }}
+                            >
+                              {enrolling === s.id ? '⏳ Enrolling...' : '✓ Enroll'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {enrollQuery.length >= 2 && enrollResults.length === 0 && (
+                    <div style={{ color: 'var(--text-faded)', fontSize: 13, textAlign: 'center', padding: 16 }}>
+                      No students found for "{enrollQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Student Table */}
               {classDetail.students.length > 0 ? (

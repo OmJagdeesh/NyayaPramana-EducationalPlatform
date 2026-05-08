@@ -19,7 +19,19 @@ export default function Navbar({ user, page, setPage, onLogout }) {
     { id: 'docs', label: '📖 Docs' },
   ];
 
+<<<<<<< HEAD
   const tabs = user.role === 'teacher' ? teacherTabs : studentTabs;
+=======
+  const adminTabs = [
+    { id: 'dashboard', label: '⚡ Dashboard' },
+    { id: 'users', label: '👥 Users' },
+    { id: 'teachers', label: '📚 Teachers' },
+    { id: 'framework', label: '🧠 Framework' },
+    { id: 'docs', label: '📖 Docs' },
+  ];
+
+  const tabs = user.role === 'admin' ? adminTabs : user.role === 'teacher' ? teacherTabs : studentTabs;
+>>>>>>> a170f25 (added the admin login and its functionaly)
 
   return (
     <nav className="navbar">
@@ -39,12 +51,21 @@ export default function Navbar({ user, page, setPage, onLogout }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8, whiteSpace: 'nowrap' }}>
           <div className="nav-role-pill" style={{
             fontSize: 10, padding: '3px 10px', borderRadius: 50,
+<<<<<<< HEAD
             background: user.role === 'teacher' ? 'rgba(10,191,188,0.15)' : 'rgba(247,201,72,0.15)',
             color: user.role === 'teacher' ? 'var(--sacred-teal)' : 'var(--gold)',
             border: `1px solid ${user.role === 'teacher' ? 'rgba(10,191,188,0.3)' : 'rgba(247,201,72,0.3)'}`,
             fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase'
           }}>
             {user.role === 'teacher' ? '📚 Teacher' : '🎓 Student'}
+=======
+            background: user.role === 'admin' ? 'rgba(239,68,68,0.15)' : user.role === 'teacher' ? 'rgba(10,191,188,0.15)' : 'rgba(247,201,72,0.15)',
+            color: user.role === 'admin' ? '#fca5a5' : user.role === 'teacher' ? 'var(--sacred-teal)' : 'var(--gold)',
+            border: `1px solid ${user.role === 'admin' ? 'rgba(239,68,68,0.3)' : user.role === 'teacher' ? 'rgba(10,191,188,0.3)' : 'rgba(247,201,72,0.3)'}`,
+            fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase'
+          }}>
+            {user.role === 'admin' ? '⚡ Admin' : user.role === 'teacher' ? '📚 Teacher' : '🎓 Student'}
+>>>>>>> a170f25 (added the admin login and its functionaly)
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user.name}</div>
           <button className="nav-btn nav-btn-inactive" onClick={onLogout} style={{ fontSize: 12 }}>← Logout</button>

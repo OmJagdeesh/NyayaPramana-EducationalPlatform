@@ -14,6 +14,10 @@ import authRoutes from './routes/auth.js';
 import gameRoutes from './routes/game.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import classRoutes from './routes/class.js';
+<<<<<<< HEAD
+=======
+import adminRoutes from './routes/admin.js';
+>>>>>>> a170f25 (added the admin login and its functionaly)
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,6 +31,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/class', classRoutes);
+<<<<<<< HEAD
+=======
+app.use('/api/admin', adminRoutes);
+>>>>>>> a170f25 (added the admin login and its functionaly)
 
 // Seed database with mock users for the leaderboard if empty
 const seedDatabase = async () => {
@@ -56,6 +64,23 @@ const seedDatabase = async () => {
     })();
     console.log('Database seeded.');
   }
+<<<<<<< HEAD
+=======
+
+  // Seed default admin account
+  const adminExists = db.prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1").get();
+  if (!adminExists) {
+    console.log('Seeding default admin account...');
+    const adminId = uuidv4();
+    const adminHash = await bcrypt.hash('Admin@1234', 10);
+    db.prepare('INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)').run(
+      adminId, 'System Admin', 'admin@nyaya.edu', adminHash, 'admin'
+    );
+    // Admins don't need user_progress, but insert a blank row to keep FK constraints happy
+    db.prepare('INSERT OR IGNORE INTO user_progress (user_id) VALUES (?)').run(adminId);
+    console.log('Admin account created: admin@nyaya.edu / Admin@1234');
+  }
+>>>>>>> a170f25 (added the admin login and its functionaly)
 };
 
 seedDatabase().then(() => {

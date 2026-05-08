@@ -10,6 +10,10 @@ import Notification from './components/Notification.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import StudentDashboard from './components/StudentDashboard.jsx';
 import TeacherDashboard from './components/TeacherDashboard.jsx';
+<<<<<<< HEAD
+=======
+import AdminDashboard from './components/AdminDashboard.jsx';
+>>>>>>> a170f25 (added the admin login and its functionaly)
 import LeaderboardPage from './components/LeaderboardPage.jsx';
 import LevelComplete from './components/LevelComplete.jsx';
 import SessionWarningModal from './components/SessionWarningModal.jsx';
@@ -146,7 +150,11 @@ export default function App() {
             {/* Navbar shown for both roles when not in game or level complete */}
             {page !== 'game' && page !== 'levelComplete' && (
               <Navbar user={user} page={page} setPage={p => {
+<<<<<<< HEAD
                 if (user.role === 'student' && p === 'leaderboard' && !(progress.completedLevels || []).length) {
+=======
+                if (user.role === 'student' && p === 'leaderboard' && !((progress?.completedLevels) || []).length) {
+>>>>>>> a170f25 (added the admin login and its functionaly)
                   notify('Complete Level 1 to unlock the Leaderboard! 🔐', 'info');
                   return;
                 }
@@ -157,6 +165,21 @@ export default function App() {
             {page === 'framework' && <FrameworkPage />}
             {page === 'docs' && <DocsPage setPage={setPage} />}
 
+<<<<<<< HEAD
+=======
+            {/* ─── ADMIN PAGES ─── */}
+            {user.role === 'admin' && (
+              <>
+                {page === 'dashboard' && (
+                  <AdminDashboard key="dashboard" user={user} onLogout={handleLogout} />
+                )}
+                {(page === 'users' || page === 'teachers') && (
+                  <AdminDashboard key={page} user={user} onLogout={handleLogout} initialTab={page} />
+                )}
+              </>
+            )}
+
+>>>>>>> a170f25 (added the admin login and its functionaly)
             {/* ─── TEACHER PAGES ─── */}
             {user.role === 'teacher' && (
               <>

@@ -78,5 +78,17 @@ export const api = {
   getAllTeachers: () => request('/class/teachers'),
   getMyTeachers: () => request('/class/my-teachers'),
   submitClassResult: (data) => request('/class/submit-result', { method: 'POST', body: JSON.stringify(data) }),
+<<<<<<< HEAD
+=======
+
+  // Admin
+  getAdminStats: () => request('/admin/stats'),
+  getAdminUsers: () => request('/admin/users'),
+  getAdminStudents: () => request('/admin/students'),
+  getAdminTeachers: () => request('/admin/teachers'),
+  resetUserPassword: (userId) => request('/admin/reset-password', { method: 'POST', body: JSON.stringify({ userId }) }),
+  deleteUser: (userId) => request(`/admin/delete-user/${userId}`, { method: 'DELETE' }),
+  removeClass: (classId) => request(`/admin/remove-class/${classId}`, { method: 'DELETE' }),
+>>>>>>> a170f25 (added the admin login and its functionaly)
 };
 

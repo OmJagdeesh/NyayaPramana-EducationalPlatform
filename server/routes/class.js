@@ -443,8 +443,13 @@ router.get('/effectiveness/:classId', authenticate, (req, res) => {
 
 // Download research export
 router.get('/research-export', authenticate, (req, res) => {
+<<<<<<< HEAD
   if (req.user.role !== 'admin' && req.user.role !== 'researcher') {
     return res.status(403).json({ error: 'Only researchers/admins can export pilot data' });
+=======
+  if (req.user.role !== 'admin' && req.user.role !== 'researcher' && req.user.role !== 'teacher') {
+    return res.status(403).json({ error: 'Only teachers/admins can export pilot data' });
+>>>>>>> a170f25 (added the admin login and its functionaly)
   }
   try {
     // Generate an anonymized CSV view of the data. 

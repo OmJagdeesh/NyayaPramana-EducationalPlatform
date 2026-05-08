@@ -29,3 +29,15 @@ export function authenticate(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 }
+<<<<<<< HEAD
+=======
+
+export function authenticateAdmin(req, res, next) {
+  authenticate(req, res, () => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    next();
+  });
+}
+>>>>>>> a170f25 (added the admin login and its functionaly)

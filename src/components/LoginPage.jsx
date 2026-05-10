@@ -8,6 +8,7 @@ export default function LoginPage({ onLogin }) {
   const [password, setPassword] = useState("");
   const [institution, setInstitution] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async () => {
     if ((isRegister && !name.trim()) || !email.trim() || !password.trim()) {
@@ -81,7 +82,12 @@ export default function LoginPage({ onLogin }) {
           )}
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input className="form-input" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+            <div style={{ position: 'relative' }}>
+              <input className="form-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ paddingRight: 48 }} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-faded)', padding: 4 }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           {error && <div style={{ color: '#fca5a5', fontSize: 13, marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.25)' }}>{error}</div>}

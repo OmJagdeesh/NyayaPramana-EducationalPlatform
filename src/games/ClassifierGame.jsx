@@ -151,6 +151,16 @@ export default function ClassifierGame({ gameType, level, user, onComplete, onEx
              <div className="question-counter">
                 {isBlitz ? `Combo x${combo}` : `Question ${qIndex + 1} / 15`}
              </div>
+             {combo >= 3 && (
+               <div className="streak-indicator" style={{ 
+                 color: 'var(--saffron)', 
+                 fontWeight: 'bold', 
+                 marginLeft: '12px',
+                 animation: 'pulse 1.5s infinite' 
+               }}>
+                 🔥 {combo}x Streak!
+               </div>
+             )}
          </div>
          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <div className={`timer-display ${timeLeft <= 10 ? 'timer-warning' : 'timer-normal'}`}>
@@ -159,7 +169,7 @@ export default function ClassifierGame({ gameType, level, user, onComplete, onEx
             <div className="score-display">
                ✦ {score}
             </div>
-            <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={onExit}>✕ Exit</button>
+            <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => { if (window.confirm('Are you sure you want to exit? Your progress will be lost.')) onExit(); }}>✕ Exit</button>
          </div>
       </div>
 

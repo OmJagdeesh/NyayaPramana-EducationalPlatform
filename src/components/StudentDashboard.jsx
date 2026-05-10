@@ -27,6 +27,31 @@ export default function StudentDashboard({ user, progress, onStartLevel, onViewL
   const accuracy = progress.accuracy || 0;
   const pramanaStats = progress.pramanaAccuracy || { pratyaksa: 0, anumana: 0, sabda: 0 };
   
+  const WISDOM_QUOTES = [
+    { sanskrit: "प्रत्यक्षानुमानोपमानशब्दाः प्रमाणानि", english: "Perception, inference, comparison, and testimony are the means of valid knowledge.", source: "Nyaya Sutra 1.1.3" },
+    { sanskrit: "दुःखजन्मप्रवृत्तिदोषमिथ्याज्ञानानाम्", english: "From false knowledge arises activity, from activity arises attachment, and from attachment arises suffering.", source: "Nyaya Sutra 1.1.2" },
+    { sanskrit: "तत्त्वज्ञानान्निःश्रेयसाधिगमः", english: "Through the knowledge of truth, one attains the highest good.", source: "Nyaya Sutra 1.1.1" },
+    { sanskrit: "प्रमाणप्रमेयसंशयप्रयोजनदृष्टान्तसिद्धान्तावयवतर्कनिर्णयवादजल्पवितण्डाहेत्वाभासच्छलजातिनिग्रहस्थानानाम्", english: "The sixteen categories of Nyaya form the foundation of logical inquiry and debate.", source: "Nyaya Sutra 1.1.1" },
+    { sanskrit: "समानप्रत्ययसिद्धं साम्यम्", english: "Equality is established through common cognition — similarity is a valid means of understanding.", source: "Nyaya Sutra 1.1.6" },
+    { sanskrit: "यथार्थानुभवः प्रमा", english: "True experience of reality is valid knowledge — the essence of Prama.", source: "Tarkasangraha" },
+  ];
+
+  const [wisdomIndex, setWisdomIndex] = useState(0);
+  const [wisdomFade, setWisdomFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWisdomFade(false);
+      setTimeout(() => {
+        setWisdomIndex(prev => (prev + 1) % WISDOM_QUOTES.length);
+        setWisdomFade(true);
+      }, 400);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentWisdom = WISDOM_QUOTES[wisdomIndex];
+  
   // Fake some cognitive skills based on pramana stats to fill 5 dimensions
   const [journals, setJournals] = useState([]);
 
@@ -92,14 +117,15 @@ export default function StudentDashboard({ user, progress, onStartLevel, onViewL
           </div>
         </div>
         <div className="dashboard-header-right">
-          <div className="wisdom-quote-inline">
+          <div className="wisdom-quote-inline" style={{ transition: 'opacity 0.4s ease', opacity: wisdomFade ? 1 : 0 }}>
             <div className="wisdom-label">📿 Nyaya Wisdom</div>
             <div className="wisdom-sanskrit">
-              "प्रत्यक्षानुमानोपमानशब्दाः प्रमाणानि"
+              "{currentWisdom.sanskrit}"
             </div>
             <div className="wisdom-english">
-              "Perception, inference... are the means of valid knowledge."
+              "{currentWisdom.english}"
             </div>
+            <div style={{ fontSize: 10, color: 'var(--text-faded)', marginTop: 4, fontStyle: 'italic' }}>— {currentWisdom.source}</div>
           </div>
           {totalScore > 0 && (
             <button className="btn-outline" onClick={onViewLeaderboard}>🏆 Leaderboard</button>

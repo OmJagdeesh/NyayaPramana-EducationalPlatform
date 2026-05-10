@@ -78,6 +78,24 @@ export default function GameEngine({ level, user, onComplete, onExit, customQues
     return () => clearInterval(timerRef.current);
   }, [qIndex, answered]);
 
+  // Keyboard shortcuts: 1-4 for options, Enter/Space for next
+  useEffect(() => {
+    function handleKeyPress(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const key = e.key;
+      if (!answeredRef.current && key >= '1' && key <= '4') {
+        const idx = parseInt(key) - 1;
+        if (idx < currentQ?.options?.length) handleAnswer(idx);
+      }
+      if (answeredRef.current && (key === 'Enter' || key === ' ')) {
+        e.preventDefault();
+        handleNext();
+      }
+    }
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  });
+
   function handleAnswer(idx) {
     if (answeredRef.current) return;
     answeredRef.current = true;
@@ -165,7 +183,7 @@ export default function GameEngine({ level, user, onComplete, onExit, customQues
           <div className="score-display">
             ✦ {score}
           </div>
-          <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={onExit}>✕ Exit</button>
+          <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => { if (window.confirm('Are you sure you want to exit? Your progress will be lost.')) onExit(); }}>✕ Exit</button>
         </div>
       </div>
 

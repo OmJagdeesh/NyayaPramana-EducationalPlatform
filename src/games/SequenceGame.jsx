@@ -229,7 +229,7 @@ export default function SequenceGame({ gameType, level, user, onComplete, onExit
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <div className="score-display">✦ {score}</div>
-          <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={onExit}>✕ Exit</button>
+          <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => { if (window.confirm('Are you sure you want to exit? Your progress will be lost.')) onExit(); }}>✕ Exit</button>
         </div>
       </div>
 

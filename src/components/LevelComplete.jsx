@@ -76,6 +76,18 @@ export default function LevelComplete({ result, onContinue, onRetry }) {
           {result.accuracy < 60 && (
             <button className="btn-outline" onClick={() => handleActionClick('retry')}>↩ Retry Level</button>
           )}
+          <button className="btn-outline" onClick={() => {
+            const text = `I just completed Level ${result.level} in Nyaya Pramana with ${result.accuracy}% accuracy! 🏆\nScore: ${result.score}\nTry it yourself!`;
+            navigator.clipboard.writeText(text);
+            const btn = document.getElementById('copy-btn');
+            if (btn) {
+              const oldText = btn.innerText;
+              btn.innerText = '✅ Copied!';
+              setTimeout(() => btn.innerText = oldText, 2000);
+            }
+          }} id="copy-btn">
+            📋 Copy Score
+          </button>
           <button className="btn-gold" onClick={() => handleActionClick('continue')}>
             {result.level < 3 ? '→ Next Level' : '🏠 Dashboard'}
           </button>
